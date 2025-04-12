@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepshock AI - Ultimate AI Toolkit</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #10b981;
+            --dark: #1e293b;
+            --darker: #0f172a;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: var(--dark);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+        }
+        .chat-bubble {
+            max-width: 80%;
+            border-radius: 1.25rem;
+        }
+        .user-bubble {
+            background-color: var(--primary);
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+        .ai-bubble {
+            background-color: #e2e8f0;
+            border-bottom-left-radius: 0.25rem;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .file-upload {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s;
+        }
+        .file-upload:hover {
+            border-color: var(--primary);
+            background-color: #f1f5f9;
+        }
+        .language-selector {
+            transition: all 0.3s;
+        }
+        .language-selector:hover {
+            transform: scale(1.05);
+        }
+        #generated-image {
+            max-height: 300px;
+            border: 2px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="gradient-bg text-white shadow-lg">
+            <div class="container mx-auto px-4 py-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-bolt text-2xl text-amber-400"></i>
+                        <h1 class="text-2xl font-bold">Deepshock AI</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative group" id="language-dropdown">
+                            <button class="flex items-center space-x-1 px-3 py-2 rounded-full bg-white bg-opacity-10 hover:bg-opacity-20 transition">
+                                <i class="fas fa-language"></i>
+                                <span id="current-language">English</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 hidden group-hover:block hover:block">
+                                <div class="py-1 grid grid-cols-2 gap-1 p-2">
+                                    <button data-lang="en" class="language-selector p-2 text-left rounded hover:bg-gray-100 flex items-center">
+                                        <span class="mr-2">🇬🇧</span> English
+                                    </button>
+                                    <button data-lang="ur" class="language-selector p-2 text-left rounded hover:bg-gray-100 flex items-center">
+                                        <span class="mr-2">🇵🇰</span> Urdu
+                                    </button>
+                                    <button data-lang="ar" class="language-selector p-2 text-left rounded hover:bg-gray-100 flex items-center">
+                                        <span class="mr-2">🇸🇦</span> Arabic
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="signin-btn" class="px-4 py-2 rounded-full bg-white text-indigo-600 font-medium hover:bg-gray-100 transition">
+                            <span data-translate="sign_in">Sign In</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Sidebar -->
+                <div class="lg:col-span-1 bg-white rounded-xl shadow-md p-4 hidden lg:block">
+                    <div class="mb-6">
+                        <button id="new-chat" class="w-full py-3 px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition flex items-center justify-center">
+                            <i class="fas fa-plus mr-2"></i> <span data-translate="new_chat">New Chat</span>
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2" data-translate="recent">Recent</p>
+                        <div class="p-3 rounded-lg hover:bg-gray-100 cursor-pointer transition">
+                            <p class="text-sm font-medium truncate" data-translate="sample_query1">How to create a logo?</p>
+                        </div>
+                        <div class="p-3 rounded-lg hover:bg-gray-100 cursor-pointer transition">
+                            <p class="text-sm font-medium truncate" data-translate="sample_query2">Convert JPG to CorelDRAW</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Panel -->
+                <div class="lg:col-span-3 space-y-6">
+                    <!-- Tabs Navigation -->
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="flex border-b border-gray-200">
+                            <button data-tab="chat" class="tab-btn flex-1 py-4 px-6 text-center font-medium text-indigo-600 border-b-2 border-indigo-600">
+                                <i class="fas fa-comment-dots mr-2"></i> <span data-translate="chat">Chat</span>
+                            </button>
+                            <button data-tab="image" class="tab-btn flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-indigo-600 transition">
+                                <i class="fas fa-image mr-2"></i> <span data-translate="image">Image</span>
+                            </button>
+                            <button data-tab="convert" class="tab-btn flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-indigo-600 transition">
+                                <i class="fas fa-exchange-alt mr-2"></i> <span data-translate="convert">Convert</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tab Contents -->
+                    <div id="chat" class="tab-content active">
+                        <!-- Chat content remains same as before -->
+                    </div>
+
+                    <!-- New Image Generation Tab -->
+                    <div id="image" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                            <div class="p-6">
+                                <h2 class="text-xl font-semibold mb-6" data-translate="image_generator">AI Image Generator</h2>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="prompt">Prompt</label>
+                                    <textarea id="image-prompt" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" rows="3" data-translate-placeholder="describe_image" placeholder="Describe the image you want to generate..."></textarea>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="style">Style</label>
+                                        <select id="image-style" class="w-full p-3 border border-gray-300 rounded-lg">
+                                            <option value="realistic" data-translate="realistic">Realistic</option>
+                                            <option value="cartoon" data-translate="cartoon">Cartoon</option>
+                                            <option value="3d" data-translate="3d">3D Art</option>
+                                            <option value="minimal" data-translate="minimal">Minimal</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="size">Size</label>
+                                        <select id="image-size" class="w-full p-3 border border-gray-300 rounded-lg">
+                                            <option value="512x512">512x512</option>
+                                            <option value="1024x1024">1024x1024</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <button id="generate-image-btn" class="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition mb-6">
+                                    <i class="fas fa-magic mr-2"></i> <span data-translate="generate_image">Generate Image</span>
+                                </button>
+                                
+                                <div id="image-result" class="hidden text-center">
+                                    <img id="generated-image" src="" alt="Generated Image" class="mx-auto mb-4">
+                                    <div class="flex justify-center space-x-4">
+                                        <button id="download-image" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+                                            <i class="fas fa-download mr-2"></i> <span data-translate="download">Download</span>
+                                        </button>
+                                        <button id="convert-to-corel" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition">
+                                            <i class="fas fa-exchange-alt mr-2"></i> <span data-translate="convert_corel">Convert to CorelDRAW</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Convert Tab (Updated for CorelDRAW) -->
+                    <div id="convert" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                            <div class="p-6">
+                                <h2 class="text-xl font-semibold mb-6" data-translate="file_conversion">File Conversion</h2>
+                                
+                                <div class="file-upload p-8 rounded-lg text-center mb-6 cursor-pointer" id="file-upload-area">
+                                    <i class="fas fa-cloud-upload-alt text-4xl text-indigo-500 mb-3"></i>
+                                    <p class="font-medium" data-translate="drag_drop">Drag & drop files here or click to browse</p>
+                                    <p class="text-sm text-gray-500 mt-1" data-translate="supported_files">Supports JPG, PNG, PDF, CDR (CorelDRAW)</p>
+                                    <input type="file" class="hidden" id="file-input" accept=".jpg,.jpeg,.png,.pdf,.cdr">
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <button class="convert-btn p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition flex flex-col items-center" data-format="pdf">
+                                        <i class="fas fa-file-pdf text-3xl text-red-500 mb-2"></i>
+                                        <span class="font-medium" data-translate="to_pdf">To PDF</span>
+                                    </button>
+                                    <button class="convert-btn p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition flex flex-col items-center" data-format="corel">
+                                        <i class="fas fa-file-image text-3xl text-purple-500 mb-2"></i>
+                                        <span class="font-medium" data-translate="to_corel">To CorelDRAW</span>
+                                    </button>
+                                    <button class="convert-btn p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition flex flex-col items-center" data-format="png">
+                                        <i class="fas fa-file-image text-3xl text-blue-500 mb-2"></i>
+                                        <span class="font-medium" data-translate="to_png">To PNG</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Language Selection for Conversion -->
+                                <div class="mt-6">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="output_lang">Output Language:</label>
+                                    <select id="conversion-language" class="w-full p-3 border border-gray-300 rounded-lg">
+                                        <option value="original" data-translate="keep_original">Keep original</option>
+                                        <option value="en">English</option>
+                                        <option value="ur">Urdu</option>
+                                        <option value="ar">Arabic</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="gradient-bg text-white py-6">
+            <div class="container mx-auto px-4 text-center">
+                <p class="text-sm">&copy; <span id="current-year"></span> <span data-translate="footer_rights">Deepshock AI. All rights reserved.</span></p>
+                <p class="text-xs mt-2 opacity-80" data-translate="developed_by">Developed proudly by a Pakistani Developer</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Translations
+        const translations = {
+            en: {
+                new_chat: "New Chat",
+                sign_in: "Sign In",
+                chat: "Chat",
+                image: "Image",
+                convert: "Convert",
+                image_generator: "AI Image Generator",
+                prompt: "Prompt",
+                describe_image: "Describe the image you want to generate...",
+                style: "Style",
+                realistic: "Realistic",
+                cartoon: "Cartoon",
+                "3d": "3D Art",
+                minimal: "Minimal",
+                size: "Size",
+                generate_image: "Generate Image",
+                download: "Download",
+                convert_corel: "Convert to CorelDRAW",
+                file_conversion: "File Conversion",
+                drag_drop: "Drag & drop files here or click to browse",
+                supported_files: "Supports JPG, PNG, PDF, CDR (CorelDRAW)",
+                to_pdf: "To PDF",
+                to_corel: "To CorelDRAW",
+                to_png: "To PNG",
+                output_lang: "Output Language:",
+                keep_original: "Keep original",
+                footer_rights: "Deepshock AI. All rights reserved.",
+                developed_by: "Developed proudly by a Pakistani Developer",
+                recent: "Recent",
+                sample_query1: "How to create a logo?",
+                sample_query2: "Convert JPG to CorelDRAW"
+            },
+            ur: {
+                new_chat: "نیا چیٹ",
+                sign_in: "سائن ان",
+                chat: "چیٹ",
+                image: "تصویر",
+                convert: "تبدیل کریں",
+                image_generator: "AI تصویر جنریٹر",
+                prompt: "پروانپٹ",
+                describe_image: "وہ تصویر بیان کریں جو آپ بنانا چاہتے ہیں...",
+                style: "اسٹائل",
+                realistic: "حقیقی",
+                cartoon: "کارٹون",
+                "3d": "3D آرٹ",
+                minimal: "منمن",
+                size: "سائز",
+                generate_image: "تصویر بنائیں",
+                download: "ڈاؤن لوڈ",
+                convert_corel: "کورل ڈرا میں تبدیل کریں",
+                file_conversion: "فائل کی تبدیلی",
+                drag_drop: "فائلیں یہاں ڈریگ کریں یا براؤز کرنے کے لیے کلک کریں",
+                supported_files: "JPG, PNG, PDF, CDR (کورل ڈرا) سپورٹ کرتا ہے",
+                to_pdf: "پی ڈی ایف میں",
+                to_corel: "کورل ڈرا میں",
+                to_png: "PNG میں",
+                output_lang: "آؤٹ پٹ زبان:",
+                keep_original: "اصل رکھیں",
+                footer_rights: "ڈیپ شاک AI۔ تمام حقوق محفوظ ہیں۔",
+                developed_by: "ایک پاکستانی ڈویلپر نے فخر سے تیار کیا",
+                recent: "حالیہ",
+                sample_query1: "لوگو کیسے بنائیں؟",
+                sample_query2: "JPG کو کورل ڈرا میں تبدیل کریں"
+            },
+            ar: {
+                new_chat: "محادثة جديدة",
+                sign_in: "تسجيل الدخول",
+                chat: "الدردشة",
+                image: "صورة",
+                convert: "تحويل",
+                image_generator: "مولد الصور بالذكاء الاصطناعي",
+                prompt: "موجه",
+                describe_image: "صف الصورة التي تريد إنشاؤها...",
+                style: "النمط",
+                realistic: "واقعي",
+                cartoon: "كرتون",
+                "3d": "فن ثلاثي الأبعاد",
+                minimal: "الحد الأدنى",
+                size: "حجم",
+                generate_image: "إنشاء صورة",
+                download: "تحميل",
+                convert_corel: "تحويل إلى CorelDRAW",
+                file_conversion: "تحويل الملفات",
+                drag_drop: "اسحب وأسقط الملفات هنا أو انقر للتصفح",
+                supported_files: "يدعم JPG, PNG, PDF, CDR (CorelDRAW)",
+                to_pdf: "إلى PDF",
+                to_corel: "إلى CorelDRAW",
+                to_png: "إلى PNG",
+                output_lang: "لغة الإخراج:",
+                keep_original: "الحفاظ على الأصل",
+                footer_rights: "Deepshock AI. جميع الحقوق محفوظة.",
+                developed_by: "تم التطوير بفخر من قبل مطور باكستاني",
+                recent: "حديث",
+                sample_query1: "كيفية إنشاء شعار؟",
+                sample_query2: "تحويل JPG إلى CorelDRAW"
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+            
+            // Language switcher
+            let currentLang = 'en';
+            const langButtons = document.querySelectorAll('[data-lang]');
+            
+            langButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentLang = btn.getAttribute('data-lang');
+                    document.getElementById('current-language').textContent = 
+                        btn.querySelector('span').textContent.trim();
+                    translatePage(currentLang);
+                });
+            });
+            
+            // Initial translation
+            translatePage(currentLang);
+            
+            // Image generation
+            document.getElementById('generate-image-btn').addEventListener('click', function() {
+                const prompt = document.getElementById('image-prompt').value;
+                if (!prompt) return;
+                
+                // Simulate AI image generation
+                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+                
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-magic mr-2"></i> Generate Image';
+                    document.getElementById('image-result').classList.remove('hidden');
+                    document.getElementById('generated-image').src = `https://source.unsplash.com/random/1024x1024/?${encodeURIComponent(prompt)}`;
+                }, 2000);
+            });
+            
+            // Convert to CorelDRAW
+            document.getElementById('convert-to-corel').addEventListener('click', function() {
+                alert('Feature coming soon! This would convert the image to CorelDRAW (.cdr) format.');
+            });
+            
+            // File conversion
+            document.querySelectorAll('.convert-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const format = this.getAttribute('data-format');
+                    alert(`Converting to ${format.toUpperCase()}... (Simulated)`);
+                });
+            });
+            
+            // File upload display
+            document.getElementById('file-input').addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    document.getElementById('file-upload-area').innerHTML = `
+                        <i class="fas fa-check-circle text-4xl text-green-500 mb-3"></i>
+                        <p class="font-medium">${this.files.length} file(s) selected</p>
+                        <p class="text-sm text-gray-500 mt-1">Ready to convert</p>
+                    `;
+                }
+            });
+        });
+        
+        // Translate the page
+        function translatePage(lang) {
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.getAttribute('data-translate');
+                el.textContent = translations[lang][key] || translations['en'][key];
+            });
+            
+            document.querySelectorAll('[data-translate-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-translate-placeholder');
+                el.placeholder = translations[lang][key] || translations['en'][key];
+            });
+        }
+    </script>
+</body>
+</html>
